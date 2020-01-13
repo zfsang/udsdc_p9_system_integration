@@ -51,7 +51,7 @@ class WaypointUpdater(object):
         
     
     def loop(self):
-        rate = rospy.Rate(3)
+        rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.pose and self.base_waypoints and self.waypoint_tree:
                 self.publish_waypoints()
@@ -80,7 +80,6 @@ class WaypointUpdater(object):
         
         return closest_idx
     
-    
     def publish_waypoints(self):
         # TODO: Implement
         final_lane = self.generate_lane()        
@@ -92,28 +91,35 @@ class WaypointUpdater(object):
         closest_idx = self.get_closest_wp_idx()
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
+
+        # add stamps to base_waypoints so we can plot them with rqt_plot
+        for i in range(len(base_waypoints)):
+            base_waypoints[i].pose.header.stamp = rospy.Time.now()
+            base_waypoints[i].twist.header.stamp = rospy.Time.now()
         
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
             lane.waypoints = base_waypoints
         else:
-            rospy.loginfo('attempt stop at wp %d, now at %d', self.stopline_wp_idx, closest_idx)
+            #rospy.loginfo('attempt stop at wp %d, now at %d', self.stopline_wp_idx, closest_idx)
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
             
         return lane
     
     def decelerate_waypoints(self, waypoints, closest_idx):
         wps = []
-        stop_idx = max(self.stopline_wp_idx - closest_idx - 4, 0)
+        stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0)
         for i, wp in enumerate(waypoints):
             p = Waypoint()
             p.pose = wp.pose
             
             dist = self.distance(waypoints, i, stop_idx)
             vel = math.sqrt(2 * MAX_DECEL * dist)
-            if vel < 10:
-                rospy.loginfo('%d, v: %f', i+closest_idx, vel)
-            if vel < 1.0:
+            #if vel < 10:
+            #    rospy.loginfo('%d, v: %f', i+closest_idx, vel)
+            if vel < 0.05:
                 vel = 0.0
+                p.twist.twist.linear.x = vel
+                wps.append(p)
                 break
                 
             p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)

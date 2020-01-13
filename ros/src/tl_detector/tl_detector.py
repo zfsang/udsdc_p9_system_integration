@@ -23,8 +23,23 @@ class TLDetector(object):
         self.waypoint_tree = None
         self.camera_image = None
         self.lights = []
-        self.img_count = 10
+        self.train_flag = False
+        self.img_count = 4
         self.img_skip = 3
+        self.last_image_stamp = None
+        
+        self.blind = rospy.get_param('~blind', False)
+        if self.blind:
+            rospy.loginfo("TL detector operating blind")
+        
+        self.collect_samples = rospy.get_param('~collect_samples', False)    
+        # minimum distance in wp index for collecting non-tl images
+        self.min_landscape_idx = rospy.get_param('~min_landscape_idx', 200)
+        # maximum distance in wp index for collecting tl images
+        self.max_light_idx = rospy.get_param('~max_light_idx', 50)
+        self.samples_path = rospy.get_param('~samples_path', '~/samples/')
+        self.sample_period = 1.0 # how many seconds between landscape samples
+        # consequently, at distances between min_landscape_idx and max_light_idx, no image will be collected
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb, queue_size=1)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb, queue_size=1)
@@ -38,7 +53,8 @@ class TLDetector(object):
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb, 
                                 queue_size=1)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb, queue_size=1)
+        if not self.blind:
+            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb, queue_size=1)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -69,6 +85,10 @@ class TLDetector(object):
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
+        if self.blind:
+            light_wp, state = self.process_traffic_lights()
+            light_wp = light_wp if state == TrafficLight.RED else -1
+            self.upcoming_red_light_pub.publish(Int32(light_wp))        
 
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
@@ -81,6 +101,9 @@ class TLDetector(object):
         if self.img_count < self.img_skip:
             self.img_count += 1
             return
+
+        if self.last_image_stamp == None:
+            self.last_image_stamp = rospy.Time.now()
         
         self.img_count = 0
         self.has_image = True
@@ -173,6 +196,31 @@ class TLDetector(object):
 
         if closest_light:
             state = self.get_light_state(closest_light)
+
+            if self.collect_samples:
+                idx_dist = line_wp_idx - car_wp_idx
+                t_process = rospy.Time.now()
+                dt_sample = (t_process - self.last_image_stamp).to_sec()
+                if idx_dist > self.min_landscape_idx and dt_sample > self.sample_period:
+                    self.last_image_stamp = t_process
+                    im = self.bridge.imgmsg_to_cv2(self.camera_image)
+                    fname = self.samples_path + '4__' + str(t_process.secs) + '-' \
+                        + str(t_proess.nsecs) + 'png'
+                    cv2.imwrite(fname, im)
+                elif idx_dist < self.max_light_idx:
+                    self.last_image_stamp = t_process
+                    label = '4__'
+                    if state == TrafficLight.RED:
+                        label = '0__'
+                    elif state == TrafficLight.YELLOW:
+                        label = '1__'
+                    elif state == TrafficLight.GREEN:
+                        label = '2__'
+                    im = self.bridge.imgmsg_to_cv2(self.camera_image)
+                    fname = self.samples_path + label + str(t_process.secs) + '_' \
+                        + str(t_process.nsecs) + 'png'
+                    cv2.imwrite(fname, im)
+
             return line_wp_idx, state
         
         return -1, TrafficLight.UNKNOWN

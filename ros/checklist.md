@@ -1,19 +1,57 @@
 # Udacity SDC Capstone Project Checklist
 
-- [ ] setup github repo
-- [ ] figure out running with camera enabled without lag
+- [x] setup github repo
+- [~] figure out running with camera enabled without lag
     - [x] enable camera in sim but disable callback (baseline perf)
         - >> lag, but only if the ros nodes are running. Manual drive without any ros nodes works OK
     - [x] figure out which node causes lag
         - waypoint_updater and tl_detector, of course
     - [x] process only 1 out of N image (or manipulate rate)
         - 1 out of 3, and limit wp update to 5 Hz, barely keeping up/slightly lagging
-    - [ ] use VM on Teglon, run sim on host, nodes on vm
-    - [ ] write c++ node for image processing
+    - [x] use VM on Teglon, run sim on host, nodes on vm
+        - >> not helping
+    - [x] use `taskset -c 0-1` for nodes, `2-7` for simulator
+        - still some lag, but minimised, I think
+    - [/] write c++ node for image processing
+    - [x] write blind mode for TL detector
+        - use vehicle/traffic_lights messages to update stopline waypoint
+- [x] fix dbw behaviour
+    - pre-fix: throttle remains constant until sudden brake at stopline
+    - [x] check waypoint_updater
+        - make sure there is a last waypoint with zero speed before break statement in deceleration function
+    - [x] check dbw_node
+    - [x] check pure pursuit
+        - next waypoint search has a minimum distance (at least 6 [m]), but if there isn't any that far, the last one is picked
+        - instead of filling post-stopline waypoints with identical waypoints, one should be enough. It'll pick the last one anyway, and next cycle the list will be empty
+        - [x] change argument in getCmdVelocity from 0 to num_of_next_waypoint_
+            - in current behaviour, the speed reference is always the speed of the first waypoint, so if we have a list of waypoints, with deceleration at the tail end, the speed reference might not reflect that
+    - [x] test changes; desired outcome:
+        - no lag
+        - stop smoothly at stoplines
+        - never get stuck at greenlight
+        - no missing waypoint warning from pure_pursuit (and not because I just suppress the warning)
+- [ ] write training data collector
 - [ ] collect training data for traffic light classifier
 - [ ] build, train  model for traffic light classifier
-- [ ] look into `pure_pursuit` waypoint following behaviour
-- [ ] test system integration
+- [x] look into `pure_pursuit` waypoint following behaviour
+    - see above point on 'fix dbw behaviour'
+- [ ] test system integration (melodic)
+- [ ] test system integration (kinetic, on workspace)
 - [ ] scout for capstone team
 - [ ] submit project (possibly individually, on-sim only)
 - [ ] graduate
+
+# Training data collector design notes
+
+- use rosparam switch
+- classes:
+    - 4: no light
+    - 2: green
+    - 1: yellow
+    - 0: red
+- classes match styx_msgs to minimise confusion
+- collection rule:
+    - if near traffic light, sample every skip (2 or 3 images)
+    - if far from light, sample at most every second
+    - name sample with timestamp and label
+- write filename parser to help with serving data during training

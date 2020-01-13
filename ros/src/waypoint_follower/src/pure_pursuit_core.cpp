@@ -377,7 +377,9 @@ geometry_msgs::TwistStamped PurePursuit::go()
       num_of_next_waypoint_ == (static_cast<int>(current_waypoints_.getSize() - 1)))
   {
     position_of_next_target_ = current_waypoints_.getWaypointPosition(num_of_next_waypoint_);
-    return outputTwist(calcTwist(calcCurvature(position_of_next_target_), getCmdVelocity(0)));
+//     return outputTwist(calcTwist(calcCurvature(position_of_next_target_), getCmdVelocity(0)));
+    return outputTwist(calcTwist(calcCurvature(position_of_next_target_),
+                                 getCmdVelocity(num_of_next_waypoint_)));
   }
 
   // linear interpolation and calculate angular velocity
@@ -391,7 +393,9 @@ geometry_msgs::TwistStamped PurePursuit::go()
 
   // ROS_INFO("next_target : ( %lf , %lf , %lf)", next_target.x, next_target.y,next_target.z);
 
-  return outputTwist(calcTwist(calcCurvature(position_of_next_target_), getCmdVelocity(0)));
+//   return outputTwist(calcTwist(calcCurvature(position_of_next_target_), getCmdVelocity(0)));
+  return outputTwist(calcTwist(calcCurvature(position_of_next_target_),
+                               getCmdVelocity(num_of_next_waypoint_)));
 
 // ROS_INFO("linear : %lf, angular : %lf",twist.twist.linear.x,twist.twist.angular.z);
 

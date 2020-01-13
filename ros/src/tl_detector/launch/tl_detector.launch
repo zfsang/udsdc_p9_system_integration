@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 <launch>
     <param name="traffic_light_config" textfile="$(find tl_detector)/sim_traffic_light_config.yaml" />
-    <node pkg="tl_detector" type="tl_detector.py" name="tl_detector" output="screen" cwd="node"/>
+    <node pkg="tl_detector" type="tl_detector.py" name="tl_detector" output="screen" cwd="node">
+        <param name="blind" value="True" />
+        <param name="collect_samples" value="False" />
+        <param name="min_landscape_idx" value="200" />
+        <param name="max_light_idx" value="50" />
+    </node>
 </launch>
