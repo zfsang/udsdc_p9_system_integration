@@ -30,8 +30,12 @@
         - stop smoothly at stoplines
         - never get stuck at greenlight
         - no missing waypoint warning from pure_pursuit (and not because I just suppress the warning)
-- [ ] write training data collector
-- [ ] collect training data for traffic light classifier
+- [x] tune training data collection parameters
+    - far threshhold must be far enough (can't see lights)
+    - close threshhold must be close enough (see lights clearly)
+    - tune the volume of data collected (raw volume and proportion between classes)
+- [x] write training data collector
+- [x] collect training data for traffic light classifier
 - [ ] build, train  model for traffic light classifier
 - [x] look into `pure_pursuit` waypoint following behaviour
     - see above point on 'fix dbw behaviour'

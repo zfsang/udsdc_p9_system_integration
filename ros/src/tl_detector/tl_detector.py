@@ -12,7 +12,7 @@ import tf
 import cv2
 import yaml
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 1
 
 class TLDetector(object):
     def __init__(self):
@@ -37,7 +37,7 @@ class TLDetector(object):
         self.min_landscape_idx = rospy.get_param('~min_landscape_idx', 200)
         # maximum distance in wp index for collecting tl images
         self.max_light_idx = rospy.get_param('~max_light_idx', 50)
-        self.samples_path = rospy.get_param('~samples_path', '~/samples/')
+        self.samples_path = rospy.get_param('~samples_path', '/home/ryan/samples/')
         self.sample_period = 1.0 # how many seconds between landscape samples
         # consequently, at distances between min_landscape_idx and max_light_idx, no image will be collected
 
@@ -195,17 +195,25 @@ class TLDetector(object):
                     line_wp_idx = tmp_wp_idx
 
         if closest_light:
+            # data collection calibration helper
+            if not self.collect_samples:
+                dee = line_wp_idx - car_wp_idx
+                rospy.loginfo('next light, %d waypoint away', dee)
+
             state = self.get_light_state(closest_light)
 
             if self.collect_samples:
                 idx_dist = line_wp_idx - car_wp_idx
                 t_process = rospy.Time.now()
                 dt_sample = (t_process - self.last_image_stamp).to_sec()
+                rospy.loginfo('next light, %d waypoint away, last sample %5.2f [s] behind', 
+                              idx_dist, dt_sample)
                 if idx_dist > self.min_landscape_idx and dt_sample > self.sample_period:
                     self.last_image_stamp = t_process
-                    im = self.bridge.imgmsg_to_cv2(self.camera_image)
+                    im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='rgb8')
                     fname = self.samples_path + '4__' + str(t_process.secs) + '-' \
-                        + str(t_proess.nsecs) + 'png'
+                        + str(t_process.nsecs) + '.png'
+                    rospy.loginfo('sample %s', fname)
                     cv2.imwrite(fname, im)
                 elif idx_dist < self.max_light_idx:
                     self.last_image_stamp = t_process
@@ -216,9 +224,10 @@ class TLDetector(object):
                         label = '1__'
                     elif state == TrafficLight.GREEN:
                         label = '2__'
-                    im = self.bridge.imgmsg_to_cv2(self.camera_image)
+                    im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
                     fname = self.samples_path + label + str(t_process.secs) + '_' \
-                        + str(t_process.nsecs) + 'png'
+                        + str(t_process.nsecs) + '.png'
+                    rospy.loginfo('sample %s', fname)
                     cv2.imwrite(fname, im)
 
             return line_wp_idx, state
