@@ -210,7 +210,7 @@ class TLDetector(object):
                               idx_dist, dt_sample)
                 if idx_dist > self.min_landscape_idx and dt_sample > self.sample_period:
                     self.last_image_stamp = t_process
-                    im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='rgb8')
+                    im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
                     fname = self.samples_path + '4__' + str(t_process.secs) + '-' \
                         + str(t_process.nsecs) + '.png'
                     rospy.loginfo('sample %s', fname)

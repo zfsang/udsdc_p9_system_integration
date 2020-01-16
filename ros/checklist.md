@@ -37,6 +37,12 @@
 - [x] write training data collector
 - [x] collect training data for traffic light classifier
 - [ ] build, train  model for traffic light classifier
+    - [x] explore data
+    - [x] write batch generator
+    - [ ] write model builder
+    - [ ] train model
+    - [ ] test inference
+    - [ ] integrate to tl_detector
 - [x] look into `pure_pursuit` waypoint following behaviour
     - see above point on 'fix dbw behaviour'
 - [ ] test system integration (melodic)
