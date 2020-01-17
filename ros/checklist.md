@@ -36,11 +36,20 @@
     - tune the volume of data collected (raw volume and proportion between classes)
 - [x] write training data collector
 - [x] collect training data for traffic light classifier
+    - [ ] recollect training data
+        - I messed up and overwrote the no-light images
+        - collect at least 1000 images, no-light should have > 2 [s] interval
+        - label the waypoint distance in the filename too, help us filter things later
+        - if not lag-inducing, process more images
 - [ ] build, train  model for traffic light classifier
     - [x] explore data
     - [x] write batch generator
     - [ ] write model builder
+        - add resize layer
+        - rebalance sample proportion
+        - rename label 4 to 3 (economise categories)
     - [ ] train model
+        - one epoch wtih naïve adaptation of net_nvidia gets us 50% accuracy
     - [ ] test inference
     - [ ] integrate to tl_detector
 - [x] look into `pure_pursuit` waypoint following behaviour

@@ -5,6 +5,7 @@
         <param name="blind" value="False" />
         <param name="collect_samples" value="True" />
         <param name="min_landscape_idx" value="300" />
-        <param name="max_light_idx" value="150" />
+        <param name="max_light_idx" value="100" />
+        <param name="sample_period" value="2.0" />
     </node>
 </launch>

@@ -3,6 +3,9 @@
 build
 devel
 samples
+.ipynb_checkpoints
+model.h5
+sample_cleaner.ipynb
 
 profile.tmp
 

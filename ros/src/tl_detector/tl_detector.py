@@ -25,8 +25,9 @@ class TLDetector(object):
         self.lights = []
         self.train_flag = False
         self.img_count = 4
-        self.img_skip = 3
+        self.img_skip = 2
         self.last_image_stamp = None
+        self.sample_count = 0
         
         self.blind = rospy.get_param('~blind', False)
         if self.blind:
@@ -38,7 +39,7 @@ class TLDetector(object):
         # maximum distance in wp index for collecting tl images
         self.max_light_idx = rospy.get_param('~max_light_idx', 50)
         self.samples_path = rospy.get_param('~samples_path', '/home/ryan/samples/')
-        self.sample_period = 1.0 # how many seconds between landscape samples
+        self.sample_period = rospy.get_param('~sample_period', 2.0) # how many seconds between landscape samples
         # consequently, at distances between min_landscape_idx and max_light_idx, no image will be collected
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb, queue_size=1)
@@ -211,13 +212,14 @@ class TLDetector(object):
                 if idx_dist > self.min_landscape_idx and dt_sample > self.sample_period:
                     self.last_image_stamp = t_process
                     im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
-                    fname = self.samples_path + '4__' + str(t_process.secs) + '-' \
-                        + str(t_process.nsecs) + '.png'
-                    rospy.loginfo('sample %s', fname)
+                    fname = self.samples_path + '3__' + str(idx_dist) + '_' \
+                            + str(t_process.secs) + '_' + str(t_process.nsecs) + '.png'
+                    self.sample_count += 1
+                    rospy.loginfo('sample %s, count %d', fname, self.sample_count)
                     cv2.imwrite(fname, im)
                 elif idx_dist < self.max_light_idx:
                     self.last_image_stamp = t_process
-                    label = '4__'
+                    label = '3__'
                     if state == TrafficLight.RED:
                         label = '0__'
                     elif state == TrafficLight.YELLOW:
@@ -225,9 +227,10 @@ class TLDetector(object):
                     elif state == TrafficLight.GREEN:
                         label = '2__'
                     im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
-                    fname = self.samples_path + label + str(t_process.secs) + '_' \
-                        + str(t_process.nsecs) + '.png'
-                    rospy.loginfo('sample %s', fname)
+                    fname = self.samples_path + label + str(idx_dist) + '_' \
+                            + str(t_process.secs) + '_' + str(t_process.nsecs) + '.png'
+                    self.sample_count += 1
+                    rospy.loginfo('sample %s, count %d', fname, self.sample_count)
                     cv2.imwrite(fname, im)
 
             return line_wp_idx, state
