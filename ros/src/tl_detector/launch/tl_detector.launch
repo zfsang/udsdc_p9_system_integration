@@ -3,9 +3,13 @@
     <param name="traffic_light_config" textfile="$(find tl_detector)/sim_traffic_light_config.yaml" />
     <node pkg="tl_detector" type="tl_detector.py" name="tl_detector" output="screen" cwd="node">
         <param name="blind" value="False" />
-        <param name="collect_samples" value="True" />
+        <param name="collect_samples" value="False" />
         <param name="min_landscape_idx" value="300" />
-        <param name="max_light_idx" value="100" />
-        <param name="sample_period" value="2.0" />
+        <param name="max_landscape_idx" value="1000" />
+        <param name="min_light_idx" value="10" />
+        <param name="max_light_idx" value="40" />
+        <param name="sample_period" value="4.0" />
+        <param name="use_model" value="False" />
+        <param name="model_name" value="" />
     </node>
 </launch>

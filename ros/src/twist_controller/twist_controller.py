@@ -62,7 +62,7 @@ class Controller(object):
         brake = 0.0
         if linear_vel < 0.05 and curr_vel < 0.05:
             throttle = 0.0
-            brake = 1400.0
+            brake = 700.0
         elif throttle < 0.1 and vel_error < 0:
             throttle = 0.0
             decel = max(vel_error, self.decel_limit)

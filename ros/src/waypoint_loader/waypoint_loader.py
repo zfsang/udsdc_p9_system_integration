@@ -21,9 +21,10 @@ class WaypointLoader(object):
         rospy.init_node('waypoint_loader', log_level=rospy.DEBUG)
 
         self.pub = rospy.Publisher('/base_waypoints', Lane, queue_size=1, latch=True)
-
+        self.loop = rospy.get_param('~loop', False)
         self.velocity = self.kmph2mps(rospy.get_param('~velocity'))
         self.new_waypoint_loader(rospy.get_param('~path'))
+        
         rospy.spin()
 
     def new_waypoint_loader(self, path):
@@ -54,7 +55,11 @@ class WaypointLoader(object):
                 p.twist.twist.linear.x = float(self.velocity)
 
                 waypoints.append(p)
-        return self.decelerate(waypoints)
+        
+        if not self.loop:
+            return self.decelerate(waypoints)
+        else:
+            return waypoints
 
     def distance(self, p1, p2):
         x, y, z = p1.x - p2.x, p1.y - p2.y, p1.z - p2.z

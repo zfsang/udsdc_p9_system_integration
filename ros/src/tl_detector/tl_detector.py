@@ -11,6 +11,8 @@ from scipy.spatial import KDTree
 import tf
 import cv2
 import yaml
+from keras.models import load_model
+import numpy as np
 
 STATE_COUNT_THRESHOLD = 1
 
@@ -25,7 +27,7 @@ class TLDetector(object):
         self.lights = []
         self.train_flag = False
         self.img_count = 4
-        self.img_skip = 2
+        self.img_skip = 1
         self.last_image_stamp = None
         self.sample_count = 0
         
@@ -36,11 +38,26 @@ class TLDetector(object):
         self.collect_samples = rospy.get_param('~collect_samples', False)    
         # minimum distance in wp index for collecting non-tl images
         self.min_landscape_idx = rospy.get_param('~min_landscape_idx', 200)
+        self.max_landscape_idx = rospy.get_param('~max_landscape_idx', 1000)
         # maximum distance in wp index for collecting tl images
+        self.min_light_idx = rospy.get_param('~min_light_idx', 30)
         self.max_light_idx = rospy.get_param('~max_light_idx', 50)
         self.samples_path = rospy.get_param('~samples_path', '/home/ryan/samples/')
         self.sample_period = rospy.get_param('~sample_period', 2.0) # how many seconds between landscape samples
         # consequently, at distances between min_landscape_idx and max_light_idx, no image will be collected
+        
+        # whether to use neural network model for light classification
+        self.use_model = rospy.get_param('~use_model', False)
+        self.model_name = rospy.get_param('~model_name', None)
+        self.model = None
+        
+        if self.model_name:
+            try:
+                self.model = load_model(self.model_name)
+                rospy.loginfo('loaded model %s', self.model_name)
+            except:
+                rospy.logerr('failed to load model %s', self.model_name)
+                self.use_model = False
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb, queue_size=1)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb, queue_size=1)
@@ -110,6 +127,18 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
+        
+        if not (self.model is None):
+            img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
+            img = np.expand_dims(img, axis=0)
+            rospy.loginfo(' '.join([str(e) for e in img.shape]))
+            predict = self.model.predict(img)
+            label = np.argmax(predict[0])
+            
+            rospy.loginfo('infer %d, know %d', label, state)
+            
+            if self.use_model:
+                state = label
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -207,9 +236,10 @@ class TLDetector(object):
                 idx_dist = line_wp_idx - car_wp_idx
                 t_process = rospy.Time.now()
                 dt_sample = (t_process - self.last_image_stamp).to_sec()
-                rospy.loginfo('next light, %d waypoint away, last sample %5.2f [s] behind', 
-                              idx_dist, dt_sample)
-                if idx_dist > self.min_landscape_idx and dt_sample > self.sample_period:
+                #rospy.loginfo('next light, %d waypoint away, last sample %5.2f [s] behind', 
+                              #idx_dist, dt_sample)
+                if idx_dist > self.min_landscape_idx and idx_dist < self.max_landscape_idx \
+                   and dt_sample > self.sample_period:
                     self.last_image_stamp = t_process
                     im = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
                     fname = self.samples_path + '3__' + str(idx_dist) + '_' \
@@ -217,7 +247,7 @@ class TLDetector(object):
                     self.sample_count += 1
                     rospy.loginfo('sample %s, count %d', fname, self.sample_count)
                     cv2.imwrite(fname, im)
-                elif idx_dist < self.max_light_idx:
+                elif idx_dist < self.max_light_idx and idx_dist > self.min_light_idx:
                     self.last_image_stamp = t_process
                     label = '3__'
                     if state == TrafficLight.RED:

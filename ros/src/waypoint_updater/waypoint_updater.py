@@ -24,8 +24,8 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-MAX_DECEL = 3.0
+LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
+MAX_DECEL = 5.0
 
 
 class WaypointUpdater(object):
@@ -91,6 +91,10 @@ class WaypointUpdater(object):
         closest_idx = self.get_closest_wp_idx()
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
+        
+        remainder = farthest_idx - len(self.base_waypoints.waypoints)
+        if remainder > 0:
+            base_waypoints += self.base_waypoints.waypoints[0:remainder]
 
         # add stamps to base_waypoints so we can plot them with rqt_plot
         for i in range(len(base_waypoints)):

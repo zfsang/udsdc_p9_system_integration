@@ -36,11 +36,17 @@
     - tune the volume of data collected (raw volume and proportion between classes)
 - [x] write training data collector
 - [x] collect training data for traffic light classifier
-    - [ ] recollect training data
+    - [x] recollect training data
         - I messed up and overwrote the no-light images
         - collect at least 1000 images, no-light should have > 2 [s] interval
         - label the waypoint distance in the filename too, help us filter things later
         - if not lag-inducing, process more images
+    - [x] collect more constrained data
+        - 20-30 waypoint from lights, to be cropped to contain the middle light
+- [x] make waypoint_updater loop around the track
+    - currently stops at final waypoint, but can be induced to loop with a little manual control
+- [x] check in with the mentor about graduation requirement on sim-only
+    - classifier is needed
 - [ ] build, train  model for traffic light classifier
     - [x] explore data
     - [x] write batch generator
@@ -50,6 +56,7 @@
         - rename label 4 to 3 (economise categories)
     - [ ] train model
         - one epoch wtih naïve adaptation of net_nvidia gets us 50% accuracy
+        - a simple one can get 90%, some misclassing on green though
     - [ ] test inference
     - [ ] integrate to tl_detector
 - [x] look into `pure_pursuit` waypoint following behaviour
