@@ -47,10 +47,16 @@
     - currently stops at final waypoint, but can be induced to loop with a little manual control
 - [x] check in with the mentor about graduation requirement on sim-only
     - classifier is needed
+- [x] prep for in-workspace training
+    - [x] spin notebook into module
+    - [x] run local module test
+    - [x] upload samples
+    - [x] run in-workspace tests
+        - it would train, but net_simple accuracy is only 78% after 4 epochs
 - [ ] build, train  model for traffic light classifier
     - [x] explore data
     - [x] write batch generator
-    - [ ] write model builder
+    - [x] write model builder
         - add resize layer
         - rebalance sample proportion
         - rename label 4 to 3 (economise categories)
@@ -59,6 +65,11 @@
         - a simple one can get 90%, some misclassing on green though
     - [ ] test inference
     - [ ] integrate to tl_detector
+- [x] fix system integration
+    - [x] verify shape of bridge output (want: (1, 600, 800, 3))
+    - [x] verify data type of bridge ouput (want: rgb, float32, (0.0, 1.0))
+    - [x] record bag with camera topic for off-sim development
+    - it's about thread and tf graph, make sure to use the same graph in every thread
 - [x] look into `pure_pursuit` waypoint following behaviour
     - see above point on 'fix dbw behaviour'
 - [ ] test system integration (melodic)
