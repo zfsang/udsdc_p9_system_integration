@@ -60,11 +60,20 @@
         - add resize layer
         - rebalance sample proportion
         - rename label 4 to 3 (economise categories)
-    - [ ] train model
+    - [x] train model
         - one epoch wtih naïve adaptation of net_nvidia gets us 50% accuracy
         - a simple one can get 90%, some misclassing on green though
-    - [ ] test inference
-    - [ ] integrate to tl_detector
+        - [x] check green recall
+            - 50ish percent with extant model
+        - [x] try greyscale input
+            - improvement! Colourblind people drive too!
+        - [x] try top-bottom crop
+        - [x] escalate model from very simple structures
+            - [x] dense only
+            - [x] one conv layer
+            - [x] two conv layer
+    - [x] test inference
+    - [x] integrate to tl_detector
 - [x] fix system integration
     - [x] verify shape of bridge output (want: (1, 600, 800, 3))
     - [x] verify data type of bridge ouput (want: rgb, float32, (0.0, 1.0))
@@ -72,6 +81,11 @@
     - it's about thread and tf graph, make sure to use the same graph in every thread
 - [x] look into `pure_pursuit` waypoint following behaviour
     - see above point on 'fix dbw behaviour'
+- [ ] split kinetic-melodic utilities
+- [ ] smoothen out inference
+    - enforce label consistence over 3 inferences
+    - train several more epochs on closer views
+    - reverse encoding at bridge
 - [ ] test system integration (melodic)
 - [ ] test system integration (kinetic, on workspace)
 - [ ] scout for capstone team

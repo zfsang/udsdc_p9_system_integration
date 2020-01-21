@@ -39,12 +39,15 @@ class TLDetector(object):
             rospy.loginfo("TL detector operating blind")
         
         self.collect_samples = rospy.get_param('~collect_samples', False)    
+
         # minimum distance in wp index for collecting non-tl images
         self.min_landscape_idx = rospy.get_param('~min_landscape_idx', 200)
         self.max_landscape_idx = rospy.get_param('~max_landscape_idx', 1000)
+
         # maximum distance in wp index for collecting tl images
         self.min_light_idx = rospy.get_param('~min_light_idx', 30)
         self.max_light_idx = rospy.get_param('~max_light_idx', 50)
+
         self.samples_path = rospy.get_param('~samples_path', '/home/ryan/samples/')
         self.sample_period = rospy.get_param('~sample_period', 2.0) # how many seconds between landscape samples
         # consequently, at distances between min_landscape_idx and max_light_idx, no image will be collected
@@ -52,6 +55,7 @@ class TLDetector(object):
         # whether to use neural network model for light classification
         self.use_model = rospy.get_param('~use_model', False)
         self.model_name = rospy.get_param('~model_name', None)
+        self.grey_model = rospy.get_param('~grey_model', False)
 
         self.model = None        
         if self.model_name:
@@ -236,30 +240,38 @@ class TLDetector(object):
                 img = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='rgb8')
                 img = np.float32(img)/255.0
                 #img = np.float32(img)
+
+                if self.grey_model:
+                    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+                    img = 2.*img - 1.
                 
                 # shift image randomly 20 pixels, to avoid being stuck
                 tx = np.random.randint(-20, 21)
                 ty = np.random.randint(-20, 21)
+                if self.grey_model:
+                    tx = np.random.randint(-50, 51)
+                    ty = np.random.randint(-50, 51)
                 
                 T = np.float32([[1, 0, tx], [0, 1, ty]])
                 nrow, ncol = img.shape[:2]
                 img = cv2.warpAffine(img, T, (ncol, nrow))
+
+                if self.grey_model:
+                    img = np.reshape(img, [nrow, ncol, 1])
                 
                 img = np.expand_dims(img, axis=0)
-                #rospy.loginfo(' '.join([str(e) for e in img.shape]))
-                #rospy.loginfo(' '.join([str(e) for e in img[0, 0, 0, :]]))
-                #rospy.loginfo(self.model.summary())
                 
                 global graph
                 with graph.as_default():
                     predict = self.model.predict(img)
                     label = np.argmax(predict[0])
-                    rospy.loginfo(str(predict))
+                    #rospy.loginfo(str(predict[0]))
+                    rg = predict[0, 0]/predict[0, 2]
+                    gr = predict[0, 2]/predict[0, 0]
                     
                     if self.use_model:
                         state = label
-                    else:
-                        rospy.loginfo('infer %d, know %d', label, state)
+                    rospy.loginfo('infer %d, know %d, rg %4.2f, gr %4.2f', label, state, rg, gr)
 
             if self.collect_samples:
                 idx_dist = line_wp_idx - car_wp_idx
