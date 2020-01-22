@@ -9,9 +9,11 @@
         <param name="min_light_idx" value="0" />
         <param name="max_light_idx" value="70" />
         <param name="sample_period" value="5.0" />
-        <param name="use_model" value="False" />
+        <param name="use_model" value="True" />
 <!--         <param name="model_name" value="" /> -->
-        <param name="model_name" value="smoldel_grey9951.h5" />
+        <param name="model_name" value="smoldel2_grey9929.h5" />
         <param name="grey_model" value="True" />
+        <param name="perturbx" value="20" />
+        <param name="perturby" value="0" />
     </node>
 </launch>

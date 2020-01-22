@@ -16,7 +16,7 @@ from keras.models import load_model
 import tensorflow
 import numpy as np
 
-STATE_COUNT_THRESHOLD = 1
+STATE_COUNT_THRESHOLD = 3
 graph = None
 
 class TLDetector(object):
@@ -56,6 +56,9 @@ class TLDetector(object):
         self.use_model = rospy.get_param('~use_model', False)
         self.model_name = rospy.get_param('~model_name', None)
         self.grey_model = rospy.get_param('~grey_model', False)
+
+        self.perturbx = rospy.get_param('~perturbx', 50)
+        self.perturby = rospy.get_param('~perturby', 0)
 
         self.model = None        
         if self.model_name:
@@ -237,7 +240,7 @@ class TLDetector(object):
             state = self.get_light_state(closest_light)
             
             if not (self.model is None) and dee < self.max_light_idx:
-                img = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='rgb8')
+                img = self.bridge.imgmsg_to_cv2(self.camera_image)
                 img = np.float32(img)/255.0
                 #img = np.float32(img)
 
@@ -246,11 +249,8 @@ class TLDetector(object):
                     img = 2.*img - 1.
                 
                 # shift image randomly 20 pixels, to avoid being stuck
-                tx = np.random.randint(-20, 21)
-                ty = np.random.randint(-20, 21)
-                if self.grey_model:
-                    tx = np.random.randint(-50, 51)
-                    ty = np.random.randint(-50, 51)
+                tx = np.random.randint(-1*self.perturbx, self.perturbx+1)
+                ty = np.random.randint(-1*self.perturby, self.perturby+1)
                 
                 T = np.float32([[1, 0, tx], [0, 1, ty]])
                 nrow, ncol = img.shape[:2]
@@ -265,13 +265,16 @@ class TLDetector(object):
                 with graph.as_default():
                     predict = self.model.predict(img)
                     label = np.argmax(predict[0])
-                    #rospy.loginfo(str(predict[0]))
                     rg = predict[0, 0]/predict[0, 2]
                     gr = predict[0, 2]/predict[0, 0]
+
+                    rg = np.min((rg, 999))
+                    gr = np.min((gr, 999))
                     
                     if self.use_model:
                         state = label
-                    rospy.loginfo('infer %d, know %d, rg %4.2f, gr %4.2f', label, state, rg, gr)
+                    rospy.loginfo('infer %d, know %d, d %d, rg %5.2f, gr %5.2f', 
+                                  label, state, dee, rg, gr)
 
             if self.collect_samples:
                 idx_dist = line_wp_idx - car_wp_idx

@@ -53,7 +53,7 @@
     - [x] upload samples
     - [x] run in-workspace tests
         - it would train, but net_simple accuracy is only 78% after 4 epochs
-- [ ] build, train  model for traffic light classifier
+- [x] build, train  model for traffic light classifier (in-simulation)
     - [x] explore data
     - [x] write batch generator
     - [x] write model builder
@@ -81,12 +81,15 @@
     - it's about thread and tf graph, make sure to use the same graph in every thread
 - [x] look into `pure_pursuit` waypoint following behaviour
     - see above point on 'fix dbw behaviour'
-- [ ] split kinetic-melodic utilities
-- [ ] smoothen out inference
+- [x] split kinetic-melodic utilities
+- [x] smoothen out inference
     - enforce label consistence over 3 inferences
     - train several more epochs on closer views
     - reverse encoding at bridge
-- [ ] test system integration (melodic)
+- [ ] harmonise modeller.py with notebook
+- [ ] check out keras' functional API
+    - you should be able to make multiscale models with it
+- [x] test system integration (melodic)
 - [ ] test system integration (kinetic, on workspace)
 - [ ] scout for capstone team
 - [ ] submit project (possibly individually, on-sim only)
