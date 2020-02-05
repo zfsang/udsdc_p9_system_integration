@@ -1,5 +1,53 @@
 # Udacity SDC Capstone Project Checklist
 
+## Post-break checklist
+
+- [x] look at the practice bag
+    - 2.25 minutes of driving back-and-forth in front of a traffic light
+    - colours are a bit washed out
+    - possible strategy:
+        - write node that takes the images and save one out of N to images (say, N=3)
+        - write labelling utility
+        - distribute utility and parts of the samples to the team
+        - get labelled dataset, check the "collect training data" line below
+- [ ] explore object detection lab more
+    - [x] reduce confidence threshhold
+        - at about 0.2 it can detect traffic light in simulation screenie
+        - unfortunately, the state isn't classified. It's just traffic light, not green, yellow, or red
+    - [ ] try against screenie from practice bag
+    - [x] try against simulation dataset
+- [ ] figure out loading trainable checkpoint
+    - probably same as odlab, frozen inference graph means the definition, not the weights, right?
+- [x] figure out output shape on single image input
+    - as configured in odlab: 100 boxes, each classified
+    - that is why we need box filtering, paring the 100 proposals into good inferences
+- [ ] figure out retraining pipeline
+    - [ ] figure out input/label shapes
+    - [ ] revise tensorflow training procedure
+    - [ ] practice training with single image
+- [ ] collect new training data
+    - [ ] in simulation
+    - [ ] on practice bag
+- [ ] retrain mobilenet ssd for traffic lights
+    - [ ] in simulation
+    - [ ] on practice bag
+- [ ] integrate retrained model with rest of system
+- [ ] test system integration
+    - [ ] melodic on local machine
+    - [ ] kinetic on workspace
+- [ ] prep submission
+- [ ] submit project
+- [ ] wait for feedback
+- [ ] graduate
+- [ ] celebrate
+
+## Team checklist
+
+- [x] prep starter pack for ZFS
+- [ ] coordinate second meeting
+
+## Personal checklist
+
 - [x] setup github repo
 - [~] figure out running with camera enabled without lag
     - [x] enable camera in sim but disable callback (baseline perf)
@@ -86,9 +134,17 @@
     - enforce label consistence over 3 inferences
     - train several more epochs on closer views
     - reverse encoding at bridge
-- [ ] harmonise modeller.py with notebook
 - [ ] check out keras' functional API
     - you should be able to make multiscale models with it
+    - it compiles, but immediately kills the kernel
+    - better start with something smaller, mvp and such
+- [~] read the ssd paper
+- [ ] figure out how to reuse other people's models
+    - revise that lesson before the behavioural cloning project
+    - figure out how to load and adjust MobileNet with keras
+    - reusing pure keras or pure tf is pretty straightforward, but the ssd example is in tf and I'd like to use keras API
+- [ ] train traffic light detector-classifier for use in-sim
+- [ ] harmonise modeller.py with notebook
 - [x] test system integration (melodic)
 - [ ] test system integration (kinetic, on workspace)
 - [ ] scout for capstone team
@@ -99,7 +155,7 @@
 
 - use rosparam switch
 - classes:
-    - 4: no light
+    - 3: no light
     - 2: green
     - 1: yellow
     - 0: red
