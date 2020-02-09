@@ -1,5 +1,21 @@
 # Udacity SDC Capstone Project Checklist
 
+
+## 08-02-12020
+
+- [x] prep local environment
+- [x] test keras model integration with resampled ssd (but not retrained)
+    - some surprise with opencv, but it works, low accuracy aside
+- [ ] retrain vgg16 ssd with udacity data (pierluigi preparation)
+    - [ ] test performance on practice bag
+- [x] figure out retraining with partially frozen weights
+    - so long as you're using keras, it's just setting layer.trainable = False
+- [ ] retrain vgg16 ssd with new label udacity data (each light status gets different label)
+    - [ ] test performance on practice bag
+- [ ] collect image bag from simulation
+- [ ] make summary to present to team
+    - even if it doesn't work well, the point is to get them thinking along this line
+
 ## Post-break checklist
 
 - [x] look at the practice bag
@@ -10,25 +26,27 @@
         - write labelling utility
         - distribute utility and parts of the samples to the team
         - get labelled dataset, check the "collect training data" line below
-- [ ] explore object detection lab more
+- [x] explore object detection lab more
     - [x] reduce confidence threshhold
         - at about 0.2 it can detect traffic light in simulation screenie
         - unfortunately, the state isn't classified. It's just traffic light, not green, yellow, or red
-    - [ ] try against screenie from practice bag
+    - [x] try against practice bag
+        - very slow, 1 Hz is borderline
     - [x] try against simulation dataset
-- [ ] figure out loading trainable checkpoint
+- [x] figure out loading trainable checkpoint
     - probably same as odlab, frozen inference graph means the definition, not the weights, right?
 - [x] figure out output shape on single image input
     - as configured in odlab: 100 boxes, each classified
     - that is why we need box filtering, paring the 100 proposals into good inferences
-- [ ] figure out retraining pipeline
-    - [ ] figure out input/label shapes
-    - [ ] revise tensorflow training procedure
-    - [ ] practice training with single image
-- [ ] collect new training data
-    - [ ] in simulation
-    - [ ] on practice bag
-- [ ] retrain mobilenet ssd for traffic lights
+
+---
+
+- [ ] get udacity dataset
+    - [ ] adapt udacity dataset; give each colour traffic light different class labels
+- [ ] retrain ssd with udacity dataset
+    - [ ] use ss300 with vgg-16 base
+    - [ ] use mobilenet base if vgg-16 is too slow
+- [ ] test retrained ssd with traffic lights
     - [ ] in simulation
     - [ ] on practice bag
 - [ ] integrate retrained model with rest of system

@@ -19,7 +19,7 @@ class ClasserTester:
         graph_file = rospy.get_param('~graph_file', 
                                      'ssd_mobilenet_v1_coco_11_06_2017/frozen_inference_graph.pb')
         self.confidence_cutoff = rospy.get_param('~confidence_cutoff', 0.1)
-        self.detect_rate = 1.0 #Hz
+        self.detect_rate = 1.5 #Hz
         
         # Load graph
         self.graph = tensorflow.Graph()
