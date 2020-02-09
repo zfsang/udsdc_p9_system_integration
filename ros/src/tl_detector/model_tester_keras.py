@@ -140,7 +140,7 @@ class ModelTesterKeras:
         t_out = rospy.Time.now()
         self.t_last_detect = t_out
         dtee = (t_out - t_in).to_sec()
-        #rospy.loginfo('period %.4f, freq %.4f', dtee, 1.0/dtee)
+        rospy.loginfo('processing %.4f, max_freq %.4f', dtee, 1.0/dtee)
         
         
 if __name__ == "__main__":

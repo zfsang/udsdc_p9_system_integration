@@ -4,6 +4,7 @@ import tensorflow
 import numpy as np
 import rospy
 import cv2
+import os
 
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -14,12 +15,16 @@ class ClasserTester:
         
         self.bridge = CvBridge()
         self.img_sub = rospy.Subscriber('image_color', Image, self.img_cb, queue_size=1)
-        self.detect_pub = rospy.Publisher('image_detect', Image, queue_size=1)
+        self.detect_pub = rospy.Publisher('image_detect_tf', Image, queue_size=1)
         
         graph_file = rospy.get_param('~graph_file', 
                                      'ssd_mobilenet_v1_coco_11_06_2017/frozen_inference_graph.pb')
+        
+        module_path = os.path.dirname(os.path.abspath(__file__))
+        graph_file = os.path.join(module_path, graph_file)
+        
         self.confidence_cutoff = rospy.get_param('~confidence_cutoff', 0.1)
-        self.detect_rate = 1.5 #Hz
+        self.detect_period = 1.5 # seconds
         
         # Load graph
         self.graph = tensorflow.Graph()
@@ -45,7 +50,7 @@ class ClasserTester:
         t_now = rospy.Time.now()
         dtee = (t_now - self.t_prev).to_sec()
         
-        if dtee < 1.0/self.detect_rate:
+        if dtee < self.detect_period:
             return
         
         self.t_prev = t_now
@@ -75,16 +80,20 @@ class ClasserTester:
                     tl_boxes.append(boxes[i])
                     tl_scores.append(scores[i])
                     tl_classes.append(classes[i])
-                    
+            
+            img_detect = img[0]
             if len(tl_classes) > 0:
                 height, width = img.shape[1:3]
                 box_coords = self.to_image_coords(tl_boxes, height, width)
                 
-                img_detect = img[0]
                 for bc in box_coords:
+                    rospy.loginfo(' '.join([str(e) for e in [bc[1], bc[0], bc[3], bc[2]]]))
                     img_detect = cv2.rectangle(img_detect, (bc[1], bc[0]), (bc[3], bc[2]),
-                                               (255, 0, 0, 4))
-                self.detect_pub.publish(self.bridge.cv2_to_imgmsg(img_detect, "rgb8"))
+                                               (255, 0, 0), 8)
+            self.detect_pub.publish(self.bridge.cv2_to_imgmsg(img_detect, "rgb8"))
+            t_end = rospy.Time.now()
+            dtee_proc = (t_end - t_now).to_sec()
+            rospy.loginfo('processing: %.3f [s]', dtee_proc)
                 
     def filter_boxes(self, min_score, boxes, scores, classes):
         """Return boxes with a confidence >= `min_score`"""
@@ -108,8 +117,6 @@ class ClasserTester:
         """
         box_coords = np.zeros_like(boxes)
         boxes = np.array(boxes)
-        #rospy.loginfo('%s', ' '.join([str(e) for e in box_coords.shape]))
-        #rospy.loginfo('%s', ' '.join([str(e) for e in boxes.shape]))
         box_coords[:, 0] = boxes[:, 0] * height
         box_coords[:, 1] = boxes[:, 1] * width
         box_coords[:, 2] = boxes[:, 2] * height
