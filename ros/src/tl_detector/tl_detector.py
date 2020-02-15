@@ -1,22 +1,23 @@
 #!/usr/bin/env python
+import os
+import yaml
+
+import cv2
+import numpy as np
+from scipy.spatial import KDTree
+
 import rospy
-from std_msgs.msg import Int32
+import tf
+from cv_bridge import CvBridge
 from geometry_msgs.msg import PoseStamped, Pose
+from std_msgs.msg import Int32
+from sensor_msgs.msg import Image
 from styx_msgs.msg import TrafficLightArray, TrafficLight
 from styx_msgs.msg import Lane
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-from light_classification.tl_classifier import TLClassifier
-from scipy.spatial import KDTree
-import tf
-import cv2
-import yaml
-import keras
-from keras.models import load_model
-import tensorflow
-import numpy as np
 
-STATE_COUNT_THRESHOLD = 3
+from light_classification.tl_classifier import TLClassifier
+
+STATE_COUNT_THRESHOLD = 1
 graph = None
 
 class TLDetector(object):
@@ -33,6 +34,8 @@ class TLDetector(object):
         self.img_skip = 1
         self.last_image_stamp = None
         self.sample_count = 0
+        
+        self.img_proc_freq = rospy.get_param('~img_prog_freq', 5.0) # Hz, how often to process incoming images
         
         self.blind = rospy.get_param('~blind', False)
         if self.blind:
@@ -54,25 +57,11 @@ class TLDetector(object):
         
         # whether to use neural network model for light classification
         self.use_model = rospy.get_param('~use_model', False)
-        self.model_name = rospy.get_param('~model_name', None)
+        self.model_path = rospy.get_param('~model_path', None)
         self.grey_model = rospy.get_param('~grey_model', False)
 
         self.perturbx = rospy.get_param('~perturbx', 50)
         self.perturby = rospy.get_param('~perturby', 0)
-
-        self.model = None        
-        if self.model_name:
-            try:
-                keras.backend.clear_session()
-                self.model = load_model(self.model_name)
-                global graph
-                graph = tensorflow.get_default_graph()
-                
-                self.model._make_predict_function()
-                rospy.loginfo('loaded model %s', self.model_name)
-            except:
-                rospy.logerr('failed to load model %s', self.model_name)
-                self.use_model = False
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb, queue_size=1)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb, queue_size=1)
@@ -95,7 +84,11 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        
+        if not self.model_path is None:
+            rospy.loginfo(self.model_path)
+            self.light_classifier = TLClassifier(self.model_path)
+            
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -135,12 +128,15 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        if self.img_count < self.img_skip:
-            self.img_count += 1
-            return
 
         if self.last_image_stamp == None:
             self.last_image_stamp = rospy.Time.now()
+        else:
+            t_now = rospy.Time.now()
+            dtee = (t_now - self.last_image_stamp).to_sec()
+            if dtee < 1.0/self.img_proc_freq:
+                return
+            self.last_image_stamp = t_now
         
         self.img_count = 0
         self.has_image = True
@@ -234,47 +230,16 @@ class TLDetector(object):
         if closest_light:
             # data collection calibration helper
             dee = line_wp_idx - car_wp_idx
-            #if not self.collect_samples:
-                #rospy.loginfo('next light, %d waypoint away', dee)
-
             state = self.get_light_state(closest_light)
             
-            if not (self.model is None) and dee < self.max_light_idx:
-                img = self.bridge.imgmsg_to_cv2(self.camera_image)
-                img = np.float32(img)/255.0
-                #img = np.float32(img)
-
-                if self.grey_model:
-                    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-                    img = 2.*img - 1.
-                
-                # shift image randomly 20 pixels, to avoid being stuck
-                tx = np.random.randint(-1*self.perturbx, self.perturbx+1)
-                ty = np.random.randint(-1*self.perturby, self.perturby+1)
-                
-                T = np.float32([[1, 0, tx], [0, 1, ty]])
-                nrow, ncol = img.shape[:2]
-                img = cv2.warpAffine(img, T, (ncol, nrow))
-
-                if self.grey_model:
-                    img = np.reshape(img, [nrow, ncol, 1])
-                
-                img = np.expand_dims(img, axis=0)
-                
-                global graph
-                with graph.as_default():
-                    predict = self.model.predict(img)
-                    label = np.argmax(predict[0])
-                    rg = predict[0, 0]/predict[0, 2]
-                    gr = predict[0, 2]/predict[0, 0]
-
-                    rg = np.min((rg, 999))
-                    gr = np.min((gr, 999))
-                    
-                    if self.use_model:
-                        state = label
-                    rospy.loginfo('infer %d, know %d, d %d, rg %5.2f, gr %5.2f', 
-                                  label, state, dee, rg, gr)
+            image = self.bridge.imgmsg_to_cv2(self.camera_image)
+            state_pred = self.light_classifier.get_classification(image)
+            
+            if self.use_model:
+                state = state_pred
+                rospy.loginfo('model says %d', state_pred)
+            else:
+                rospy.loginfo('know %d, predict %d', state, state_pred)
 
             if self.collect_samples:
                 idx_dist = line_wp_idx - car_wp_idx
