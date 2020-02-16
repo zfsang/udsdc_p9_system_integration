@@ -232,7 +232,7 @@ class TLDetector(object):
             dee = line_wp_idx - car_wp_idx
             state = self.get_light_state(closest_light)
             
-            image = self.bridge.imgmsg_to_cv2(self.camera_image)
+            image = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
             state_pred = self.light_classifier.get_classification(image)
             
             if self.use_model:

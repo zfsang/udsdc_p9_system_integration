@@ -22,7 +22,7 @@ class ModelTesterCNW:
         self.img_sub = rospy.Subscriber('image_color', Image, self.img_cb, queue_size=1)
         self.detect_pub = rospy.Publisher('image_detect_cnw', Image, queue_size=1)
         
-        graph_file = rospy.get_param('~graph_file', 'logs_sim/ckpt-1-9170.pb')
+        graph_file = rospy.get_param('~graph_file', 'logs_sim/ckpt-1-1834.pb')
         module_path = os.path.dirname(os.path.abspath(__file__))
         graph_path = os.path.join(module_path, graph_file)
         
@@ -56,7 +56,7 @@ class ModelTesterCNW:
         if dt_detect < self.t_detect:
             return
         
-        img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
+        img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         img = cv2.resize(img, (384, 288))
         preds = self.predict(np.expand_dims(img, 0))
         

@@ -3,7 +3,7 @@
     <param name="traffic_light_config" textfile="$(find tl_detector)/sim_traffic_light_config.yaml" />
     <node pkg="tl_detector" type="tl_detector.py" name="tl_detector" output="screen" cwd="node">
         <param name="blind" value="False" />
-        <param name="img_prog_freq" value="5.0" />
+        <param name="img_prog_freq" value="1.0" />
         
         <param name="collect_samples" value="False" />
         <param name="min_landscape_idx" value="300" />
@@ -13,8 +13,7 @@
         <param name="sample_period" value="5.0" />
         
         <param name="use_model" value="True" />
-        <param name="model_path" value="$(find tl_detector)/logs_sim/ckpt-1-9170.pb" />
-        <param name="grey_model" value="True" />
+        <param name="model_path" value="$(find tl_detector)/logs_sim/ckpt-1-1834.pb" />
         <param name="perturbx" value="20" />
         <param name="perturby" value="0" />
     </node>
