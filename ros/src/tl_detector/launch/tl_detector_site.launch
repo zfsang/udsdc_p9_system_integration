@@ -2,7 +2,7 @@
 <launch>
     <node pkg="tl_detector" type="tl_detector.py" name="tl_detector" output="screen" cwd="node">
         <param name="blind" value="False" />
-        <param name="img_prog_freq" value="1.0" />
+        <param name="img_prog_freq" value="5.0" />
         
         <param name="collect_samples" value="False" />
         <param name="min_landscape_idx" value="300" />
