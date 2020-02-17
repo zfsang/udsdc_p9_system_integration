@@ -32,14 +32,11 @@ class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
 
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
-
-        # TODO: Add other member variables you need below
         
         self.pose = None
         self.base_waypoints = None
@@ -59,8 +56,6 @@ class WaypointUpdater(object):
                 
                 
     def get_closest_wp_idx(self):
-        # TODO: Implement
-        
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
         
@@ -81,7 +76,6 @@ class WaypointUpdater(object):
         return closest_idx
     
     def publish_waypoints(self):
-        # TODO: Implement
         final_lane = self.generate_lane()        
         self.final_waypoints_pub.publish(final_lane)
         
@@ -132,12 +126,9 @@ class WaypointUpdater(object):
         
 
     def pose_cb(self, msg):
-        # TODO: Implement
         self.pose = msg
-        pass
 
     def waypoints_cb(self, waypoints):
-        # TODO: Implement
         self.base_waypoints = waypoints
         if not self.waypoints_2D:
             self.waypoints_2D = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y]\
@@ -146,7 +137,6 @@ class WaypointUpdater(object):
             
 
     def traffic_cb(self, msg):
-        # TODO: Callback for /traffic_waypoint message. Implement
         self.stopline_wp_idx = msg.data
         
 

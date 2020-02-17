@@ -10,7 +10,7 @@ import tensorflow as tf
 
 class TLClassifier(object):
     def __init__(self, graph_path):
-        #TODO load classifier
+        # load classifier
         
         self.sess = tf.Session()
         with tf.gfile.FastGFile(graph_path, 'rb') as gf:
@@ -23,7 +23,6 @@ class TLClassifier(object):
         self.fetch_nodes = [self.sess.graph.get_tensor_by_name(name) for name in fetch_names]
         self.fetch_dict = {node.name.split(':')[0].split('/')[-1]: node for node in self.fetch_nodes}
         
-        #print self.fetch_dict
         self.input_node = self.sess.graph.get_tensor_by_name('CBNOnet/images:0')
         self.light_map = [TrafficLight.RED,     # 0
                           TrafficLight.YELLOW,  # 1
@@ -39,7 +38,6 @@ class TLClassifier(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        #TODO implement light color prediction
         image = cv2.resize(image, (384, 288))
         images = np.expand_dims(image, 0)
         ret = self.sess.run(self.fetch_dict, {self.input_node: images})
