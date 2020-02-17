@@ -60,8 +60,12 @@ class TLDetector(object):
         self.model_path = rospy.get_param('~model_path', None)
         self.grey_model = rospy.get_param('~grey_model', False)
 
-        self.perturbx = rospy.get_param('~perturbx', 50)
+        self.perturbx = rospy.get_param('~perturbx', 0)
+        self.preturbx = max(self.perturbx, 1)
         self.perturby = rospy.get_param('~perturby', 0)
+        self.preturby = max(self.perturby, 1)
+        self.perturbc = rospy.get_param('~perturbc', 0)
+        self.preturbc = max(self.perturbc, 1)
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb, queue_size=1)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb, queue_size=1)
@@ -233,6 +237,18 @@ class TLDetector(object):
             state = self.get_light_state(closest_light)
             
             image = self.bridge.imgmsg_to_cv2(self.camera_image, desired_encoding='bgr8')
+            
+            # perturb image to reduce risk of getting stuck
+            x_offset = np.random.randint(0, self.perturbx)
+            y_offset = np.random.randint(0, self.perturby)
+            
+            new_width = 800 - self.perturbx
+            new_height = 600 - self.perturby
+            image = image[y_offset:y_offset+new_height,
+                          x_offset:x_offset+new_width, :]
+            
+            image += np.uint8(self.perturbc*np.ones(image.shape))
+            
             state_pred = self.light_classifier.get_classification(image)
             
             if self.use_model:

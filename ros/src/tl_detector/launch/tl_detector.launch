@@ -14,7 +14,8 @@
         
         <param name="use_model" value="True" />
         <param name="model_path" value="$(find tl_detector)/logs_sim/ckpt-1-1834.pb" />
-        <param name="perturbx" value="20" />
-        <param name="perturby" value="0" />
+        <param name="perturbx" value="80" />
+        <param name="perturby" value="60" />
+        <param name="perturbc" value="10" />
     </node>
 </launch>
