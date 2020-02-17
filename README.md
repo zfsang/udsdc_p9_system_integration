@@ -1,5 +1,12 @@
 # Self-Driving Car System Integration
 
+## Team Members
+
+- Ryan Arya Pratama, ryan.arya.pratama@gmail.com
+- Zhifan Sang, zfsang@gmail.com
+- Sabari Rajan, sabari.rajan90@gmail.com
+- Ching Nian Wong, drah2easy@gmail.com
+
 ## Externs
 
 Starter code from [Udacity](https://github.com/udacity/CarND-Capstone)
