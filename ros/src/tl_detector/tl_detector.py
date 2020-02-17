@@ -59,6 +59,7 @@ class TLDetector(object):
         self.use_model = rospy.get_param('~use_model', False)
         self.model_path = rospy.get_param('~model_path', None)
         self.grey_model = rospy.get_param('~grey_model', False)
+        self.light_labels = ['red', 'yellow', 'green', 'unknown', 'unknown']
 
         self.perturbx = rospy.get_param('~perturbx', 0)
         self.preturbx = max(self.perturbx, 1)
@@ -251,7 +252,7 @@ class TLDetector(object):
             
             if self.use_model:
                 state = state_pred
-                rospy.loginfo('model says %d', state_pred)
+                rospy.loginfo('model says %s', self.light_labels[state_pred])
             else:
                 rospy.loginfo('know %d, predict %d', state, state_pred)
 
