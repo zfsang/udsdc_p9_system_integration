@@ -13,6 +13,42 @@ Starter code from [Udacity](https://github.com/udacity/CarND-Capstone)
 
 Traffic light detector-classifier network as implemented by [CN Wong](https://github.com/almightybobo/tl_detector)
 
+## Overview
+###  waypoint updater node
+- input: 
+	- base waypoint topic (the ground truth of the track)
+	- current pose topic (the current position / speed of the car)
+	- traffic waypoint topic
+- output:
+	- final waypoint topic
+- method:
+	- KD tree (used to find closest waypoint for the car to follow)
+
+
+### drive-by-wire (dbw) node
+- input:
+	- current velocity topic
+	- twist cmd topic
+	- dbw enabled topi
+- output:
+	- throttle, brake, steering of the car (published by Controller class imported from twist_controller.py)
+- method:
+	- PID filter (pid.py)
+	- low pass filter (lowpass.py)
+	- yaw controller (convert target linear and angular velocity to steering commands.) 
+
+### traffic light detection node
+- input:
+	- base waypoint topic
+	- current pose topic
+	- image color topic
+	- traffic light topic (3D position of the traffic light)
+- output:
+	- traffic waypoint topic
+- method: 
+	- object detection with CNN (Tensorflow)
+
+
 ## Dependencies
 
 Requires `dbw_mkz_msgs`. If you are on the Udacity workspace, copy over from the provided starter code. Otherwise, install `ros-{melodic, kinetic}-dbw-mkz-msgs` with apt.
